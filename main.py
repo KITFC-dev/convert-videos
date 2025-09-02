@@ -4,12 +4,13 @@ from utils.common import mb, measure
 from utils.ffmpeg.transcoder import transcode
 from utils.logger import prerror, prinfo, prsuccess
 
-def convert_video(file_path: str):
-    output_path = (
-        f"converted/{os.path.splitext(file_path)[0]}"
-        f"_converted{os.path.splitext(file_path)[1]}"
-    )
+def convert_video(file_path: str, base_folder: str):
+    # Get output path
+    rel_path = os.path.relpath(file_path, base_folder)
+    name, ext = os.path.splitext(rel_path)
+    output_path = os.path.join(os.getcwd(), "converted", f"{name}_converted{ext}")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
     transcode(
         # Input folder and output folder paths
         input_path=file_path,
@@ -32,14 +33,14 @@ def convert_video(file_path: str):
 
 @measure(prinfo)
 def convert_videos(folder_path: str):
-    os.makedirs("converted", exist_ok=True)
     video_files = get_all_video_files(folder_path)
     converted_files = []
+
     for file_path in video_files:
         prinfo(f"Starting conversion for {file_path} ({mb(file_path)})")
         try:
-            output_path = convert_video(file_path)
-            prsuccess(f"Converted {file_path} ({mb(output_path)})")
+            output_path = convert_video(file_path, folder_path)
+            prsuccess(f"Converted to {output_path} ({mb(output_path)})")
             converted_files.append(output_path)
         except Exception as e:
             prerror(f"Failed to convert {file_path}: {e}")
@@ -47,4 +48,4 @@ def convert_videos(folder_path: str):
 
 if __name__ == "__main__":
     # Convert all videos in the given folder to "converted" folder
-    convert_videos("samples")
+    convert_videos(r"C:\Users\user\Videos")
