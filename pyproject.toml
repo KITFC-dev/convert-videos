@@ -1,7 +1,7 @@
 [project]
 name = "VideoConverter"
 version = "0.1.0"
-description = "Script to convert videos from one folder"
+description = "Script to convert videos to a smaller size and preserve good quality"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
