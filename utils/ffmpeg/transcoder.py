@@ -79,8 +79,9 @@ def transcode(
     
     # Print ffmpeg's output as debug
     try:
-        for line in proc.stderr:
-            prdebug(line.rstrip("\r\n"))
+        if proc.stderr:
+            for line in proc.stderr:
+                prdebug(line.rstrip("\r\n"))
     except KeyboardInterrupt:
         proc.terminate()
         raise

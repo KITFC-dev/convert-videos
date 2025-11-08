@@ -1,6 +1,6 @@
 from colorama import Fore, Style
 
-DEBUG = False
+DEBUG = True
 
 def prinfo(msg): print(f"{Fore.CYAN}[INFO]{Style.RESET_ALL} {msg}")
 def prsuccess(msg): print(f"{Fore.GREEN}[SUCCESS]{Style.RESET_ALL} {msg}")
