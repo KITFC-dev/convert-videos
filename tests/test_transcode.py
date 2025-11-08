@@ -62,7 +62,6 @@ def run_transcode_test(input_file, prefer_gpu=True, ten_bit=False, nvenc_cq=19, 
 ])
 @pytest.mark.parametrize("resolution", ["320x240", "1280x720", "1920x1080"])
 @pytest.mark.parametrize("bitrate", ["500k", "5000k"])
-@measure(prinfo)
 def test_video_encoding(encoder_config, resolution, bitrate):
     """
     Test video transcoding with different encoder 
