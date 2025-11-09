@@ -31,16 +31,17 @@ def timed(log_func):
         return wrapper
     return decorator
 
-def measure(log_func, input_folder_=None):
+def measure(log_func, input_folder_=None, output_folder_="converted"):
     def decorator(func):
         @timed(log_func)
         @wraps(func)
         def wrapper(*args, **kwargs):
             input_folder = input_folder_ or (args[0] if len(args) > 0 else None)
+            output_folder = output_folder_
             if input_folder:
                 input_size = get_folder_size(input_folder)
 
-            converted_files, output_folder = func(*args, **kwargs)
+            result = func(*args, **kwargs)
 
             if input_folder:
                 output_size = get_folder_size(output_folder)
@@ -50,6 +51,6 @@ def measure(log_func, input_folder_=None):
                     f"Size reduction: {mb(input_folder)} -> "
                     f"{mb(output_folder)} ({reduction_percent:.2f}%)"
                 )
-            return converted_files, output_folder
+            return result
         return wrapper
     return decorator
