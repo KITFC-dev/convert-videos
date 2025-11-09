@@ -3,7 +3,7 @@ import argparse
 from utils.files import get_all_video_files
 from utils.common import mb, measure
 from utils.ffmpeg.transcoder import transcode
-from utils.logger import prerror, prinfo, prsuccess, prdebug, DEBUG
+from utils.logger import prerror, prinfo, prsuccess, prdebug
 
 def convert_video(file_path: str, base_folder: str, suffix: str = "", same_dir: bool = False) -> str:
     # Get output path
@@ -76,7 +76,8 @@ if __name__ == "__main__":
     parser.add_argument("--debug", action="store_true", default=False, help="Enable debug logging")
     args = parser.parse_args()
 
-    DEBUG = args.debug
+    import utils.logger
+    utils.logger.DEBUG = args.debug
 
     if not os.path.exists(args.input):
         prerror(f"Input folder {args.input} does not exist")
