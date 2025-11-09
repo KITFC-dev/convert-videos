@@ -2,9 +2,7 @@ import os
 import subprocess
 import tempfile
 import pytest
-from utils.common import measure
 from utils.ffmpeg.transcoder import transcode
-from utils.logger import prinfo
 
 
 def generate_test_video(

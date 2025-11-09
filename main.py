@@ -1,4 +1,5 @@
 import os
+import argparse
 from utils.files import get_all_video_files
 from utils.common import mb, measure
 from utils.ffmpeg.transcoder import transcode
@@ -66,7 +67,19 @@ def convert_videos(input: str, suffix: str = "_converted", same_dir: bool = Fals
     return converted_files, input
 
 if __name__ == "__main__":
-    convert_videos(r"C:\Users\kitfc\dev\python\convertvideos\tes",
-        suffix="_converted", 
-        same_dir=False
+    parser = argparse.ArgumentParser(
+        description="Script to convert videos to a smaller size and preserve good quality"
+    )
+    parser.add_argument("input", type=str, help="Input folder path with videos")
+    parser.add_argument("-s", "--suffix", type=str, default="_converted", help="Suffix at the end of output file names")
+    parser.add_argument("-d", "--same-dir", action="store_true", help="Should we save to same directory as the input?")
+    args = parser.parse_args()
+
+    if not os.path.exists(args.input):
+        prerror(f"Input folder {args.input} does not exist")
+        exit(1)
+
+    convert_videos(args.input,
+        suffix=args.suffix, 
+        same_dir=args.same_dir
     )

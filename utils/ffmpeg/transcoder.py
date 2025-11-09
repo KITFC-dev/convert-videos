@@ -15,8 +15,7 @@ def transcode(
     target_resolution: str = "1280x720"
 ):
     """
-    Transcodes a video file using ffmpeg to a smaller video file while
-    preserving good quality.
+    Transcodes a video file using ffmpeg from one format to another.
 
     Args:
         input_path (str): Path to the input video file
