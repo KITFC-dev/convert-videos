@@ -1,9 +1,12 @@
 import os
 import argparse
+
+from typing import Optional
+
 from utils.files import get_all_video_files
 from utils.common import mb, measure
 from utils.ffmpeg.transcoder import transcode
-from utils.logger import prerror, prinfo, prsuccess, prdebug
+from utils.logger import prerror, prinfo, prsuccess, prwarn
 
 def convert_video(file_path: str, base_folder: str, suffix: str = "", same_dir: bool = False) -> str:
     # Get output path
@@ -39,13 +42,13 @@ def convert_video(file_path: str, base_folder: str, suffix: str = "", same_dir: 
     )
 
     if overwriting:
-        prdebug(f"Replacing original file: {file_path}")
+        prwarn(f"Overwriting: {file_path}")
         os.replace(output_path, file_path)
         output_path = file_path
     return output_path
 
 @measure(prinfo)
-def convert_videos(input: str, suffix: str = "_converted", same_dir: bool = False) -> tuple[list[str], str]:
+def convert_videos(input: str, suffix: str = "_converted", same_dir: bool = False, ignore_suffix: Optional[str] = None) -> tuple[list[str], str]:
     """
     Convert all video files in the input folder.
     Args:
@@ -53,7 +56,7 @@ def convert_videos(input: str, suffix: str = "_converted", same_dir: bool = Fals
         suffix (str): Suffix at the end of output file names
         same_dir (bool): Save to same directory as the input?
     """
-    video_files = get_all_video_files(input)
+    video_files = get_all_video_files(input, ignore_suffix=ignore_suffix)
     converted_files = []
 
     for file_path in video_files:
@@ -72,7 +75,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("input", type=str, help="Input folder path with videos")
     parser.add_argument("-s", "--suffix", type=str, default="_converted", help="Suffix at the end of output file names")
-    parser.add_argument("-d", "--same-dir", action="store_true", help="Should we save to same directory as the input?")
+    parser.add_argument("-sd", "--same-dir", action="store_true", help="Should we save to same directory as the input?")
+    parser.add_argument("-is", "--ignore-suffix", type=str, default=None, help="Ignore files that already have this suffix")
     parser.add_argument("--debug", action="store_true", default=False, help="Enable debug logging")
     args = parser.parse_args()
 
@@ -85,5 +89,6 @@ if __name__ == "__main__":
 
     convert_videos(args.input,
         suffix=args.suffix, 
-        same_dir=args.same_dir
+        same_dir=args.same_dir,
+        ignore_suffix=args.ignore_suffix
     )
