@@ -4,7 +4,7 @@ import argparse
 from typing import Optional
 
 from utils.files import get_all_video_files, get_folder_size, get_output_path
-from utils.common import mb, timed
+from utils.common import mb, to_mb, timed
 from utils.ffmpeg.transcoder import transcode
 from utils.logger import prerror, prinfo, prsuccess, prwarn
 
@@ -53,9 +53,9 @@ def convert_videos(input: str, suffix: str = "_converted", same_dir: bool = Fals
         prinfo(f"Starting conversion for {file_path} ({mb(file_path)})")
         try:
             output_path, overwriting = get_output_path(file_path, input, suffix, same_dir)
-            convert_video(file_path, output_path, overwriting)
-            prsuccess(f"Converted to {output_path} ({mb(output_path)})")
-            converted_files.append(output_path)
+            result_path = convert_video(file_path, output_path, overwriting)
+            prsuccess(f"Converted to {result_path} ({mb(result_path)})")
+            converted_files.append(result_path)
         except Exception as e:
             prerror(f"Failed to convert {file_path}: {e}")
     
@@ -63,8 +63,8 @@ def convert_videos(input: str, suffix: str = "_converted", same_dir: bool = Fals
     output_folder = os.path.join(os.getcwd(), "converted") if not same_dir else input
     output_size = get_folder_size(output_folder)
     reduction = (((input_size - output_size) / input_size) * 100) if input_size > 0 else 0
-    prinfo(f"Size reduction: {mb(input)} -> "
-        f"{mb(output_folder)} ({reduction:.2f}%)")
+    prinfo(f"Size reduction: {to_mb(input_size)} -> "
+        f"{to_mb(output_size)} ({reduction:.2f}%)")
 
     return converted_files
 
