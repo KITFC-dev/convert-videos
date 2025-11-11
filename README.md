@@ -12,5 +12,7 @@
 Args:
     input (str): Input folder path with videos
     suffix (str): Suffix at the end of output file names
-    output (str): Output folder path
+    same_dir (bool): Save to same directory as the input?
+    ignore_suffix (str): Ignore files that already have this suffix
+    delete_original (bool): Delete original file after conversion?
 ```
