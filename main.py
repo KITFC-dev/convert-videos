@@ -8,7 +8,12 @@ from utils.common import mb, to_mb, timed
 from utils.ffmpeg.transcoder import transcode
 from utils.logger import prerror, prinfo, prsuccess, prwarn
 
-def convert_video(input: str, output: str, overwriting: bool) -> str:
+def convert_video(
+    input: str, 
+    output: str, 
+    overwriting: bool, 
+    delete_original: bool = False
+) -> str:
     os.makedirs(os.path.dirname(output), exist_ok=True)
 
     transcode(
@@ -34,30 +39,52 @@ def convert_video(input: str, output: str, overwriting: bool) -> str:
         prwarn(f"Overwriting: {input}")
         os.replace(output, input)
         output = input
+    elif delete_original:
+        prwarn(f"Deleting: {input}")
+        os.remove(input)
+        
     return output
 
 @timed(prinfo)
-def convert_videos(input: str, suffix: str = "_converted", same_dir: bool = False, ignore_suffix: Optional[str] = None) -> list[str]:
+def convert_videos(
+    input: str, 
+    suffix: str = "_converted", 
+    same_dir: bool = False, 
+    ignore_suffix: Optional[str] = None, 
+    delete_original: bool = False
+) -> list[str]:
     """
     Convert all video files in the input folder.
     Args:
         input (str): Input folder path with videos
         suffix (str): Suffix at the end of output file names
         same_dir (bool): Save to same directory as the input?
+        ignore_suffix (str): Ignore files that already have this suffix
+        delete_original (bool): Delete original file after conversion?
     """
     video_files = get_all_video_files(input, ignore_suffix=ignore_suffix)
     converted_files = []
     input_size = get_folder_size(input)
 
     for file_path in video_files:
-        prinfo(f"Starting conversion for {file_path} ({mb(file_path)})")
+        prinfo(f"Converting: {file_path} ({mb(file_path)})")
         try:
-            output_path, overwriting = get_output_path(file_path, input, suffix, same_dir)
-            result_path = convert_video(file_path, output_path, overwriting)
-            prsuccess(f"Converted to {result_path} ({mb(result_path)})")
+            # Convert the file
+            output_path, overwriting = get_output_path(
+                file_path, 
+                input, 
+                suffix, 
+                same_dir)
+            result_path = convert_video(
+                file_path, 
+                output_path, 
+                overwriting, 
+                delete_original=delete_original)
+
+            prsuccess(f"Converted to: {result_path} ({mb(result_path)})")
             converted_files.append(result_path)
         except Exception as e:
-            prerror(f"Failed to convert {file_path}: {e}")
+            prerror(f"Failed to convert: {file_path}: {e}")
     
     # Calculate size reduction
     output_folder = os.path.join(os.getcwd(), "converted") if not same_dir else input
@@ -74,8 +101,9 @@ if __name__ == "__main__":
     )
     parser.add_argument("input", type=str, help="Input folder path with videos")
     parser.add_argument("-s", "--suffix", type=str, default="_converted", help="Suffix at the end of output file names")
-    parser.add_argument("-sd", "--same-dir", action="store_true", help="Should we save to same directory as the input?")
     parser.add_argument("-is", "--ignore-suffix", type=str, default=None, help="Ignore files that already have this suffix")
+    parser.add_argument("-sd", "--same-dir", action="store_true", help="Should we save to same directory as the input?")
+    parser.add_argument("-del", "--delete-original", action="store_true", help="Should we delete original files after conversion?")
     parser.add_argument("--debug", action="store_true", default=False, help="Enable debug logging")
     args = parser.parse_args()
 
@@ -89,5 +117,6 @@ if __name__ == "__main__":
     convert_videos(args.input,
         suffix=args.suffix, 
         same_dir=args.same_dir,
-        ignore_suffix=args.ignore_suffix
+        ignore_suffix=args.ignore_suffix,
+        delete_original=args.delete_original
     )
