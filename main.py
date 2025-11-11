@@ -3,29 +3,18 @@ import argparse
 
 from typing import Optional
 
-from utils.files import get_all_video_files
-from utils.common import mb, measure
+from utils.files import get_all_video_files, get_folder_size, get_output_path
+from utils.common import mb, timed
 from utils.ffmpeg.transcoder import transcode
 from utils.logger import prerror, prinfo, prsuccess, prwarn
 
-def convert_video(file_path: str, base_folder: str, suffix: str = "", same_dir: bool = False) -> str:
-    # Get output path
-    rel_path = os.path.relpath(file_path, base_folder)
-    name, ext = os.path.splitext(rel_path)
-    overwriting = True if suffix == "" and same_dir else False
-    
-    # Build output path
-    if not same_dir:
-        output_path = os.path.join(os.getcwd(), "converted", f"{name}{suffix}{ext}")
-    else:
-        output_path = os.path.join(base_folder, f"{name}{'.' if overwriting else ''}{suffix}{ext}")
-
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+def convert_video(input: str, output: str, overwriting: bool) -> str:
+    os.makedirs(os.path.dirname(output), exist_ok=True)
 
     transcode(
         # Input folder and output folder paths
-        input_path=file_path,
-        output_path=output_path,
+        input_path=input,
+        output_path=output,
         # 10bit is recommended, it has more colors and better compression,
         # the only downside is that its not compatible on all devices
         ten_bit=True,
@@ -42,13 +31,13 @@ def convert_video(file_path: str, base_folder: str, suffix: str = "", same_dir: 
     )
 
     if overwriting:
-        prwarn(f"Overwriting: {file_path}")
-        os.replace(output_path, file_path)
-        output_path = file_path
-    return output_path
+        prwarn(f"Overwriting: {input}")
+        os.replace(output, input)
+        output = input
+    return output
 
-@measure(prinfo)
-def convert_videos(input: str, suffix: str = "_converted", same_dir: bool = False, ignore_suffix: Optional[str] = None) -> tuple[list[str], str]:
+@timed(prinfo)
+def convert_videos(input: str, suffix: str = "_converted", same_dir: bool = False, ignore_suffix: Optional[str] = None) -> list[str]:
     """
     Convert all video files in the input folder.
     Args:
@@ -58,16 +47,26 @@ def convert_videos(input: str, suffix: str = "_converted", same_dir: bool = Fals
     """
     video_files = get_all_video_files(input, ignore_suffix=ignore_suffix)
     converted_files = []
+    input_size = get_folder_size(input)
 
     for file_path in video_files:
         prinfo(f"Starting conversion for {file_path} ({mb(file_path)})")
         try:
-            output_path = convert_video(file_path, input, suffix, same_dir)
+            output_path, overwriting = get_output_path(file_path, input, suffix, same_dir)
+            convert_video(file_path, output_path, overwriting)
             prsuccess(f"Converted to {output_path} ({mb(output_path)})")
             converted_files.append(output_path)
         except Exception as e:
             prerror(f"Failed to convert {file_path}: {e}")
-    return converted_files, input
+    
+    # Calculate size reduction
+    output_folder = os.path.join(os.getcwd(), "converted") if not same_dir else input
+    output_size = get_folder_size(output_folder)
+    reduction = (((input_size - output_size) / input_size) * 100) if input_size > 0 else 0
+    prinfo(f"Size reduction: {mb(input)} -> "
+        f"{mb(output_folder)} ({reduction:.2f}%)")
+
+    return converted_files
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

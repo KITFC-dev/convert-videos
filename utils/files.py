@@ -26,3 +26,16 @@ def get_all_video_files(folder_path: str, extensions=VIDEO_EXTENSIONS, ignore_su
                 else:
                     prwarn(f"Ignoring: {os.path.join(root, file)}")
     return video_files
+
+def get_output_path(file_path: str, base_folder: str, suffix: str = "", same_dir: bool = False) -> tuple[str, bool]:
+    rel_path = os.path.relpath(file_path, base_folder)
+    name, ext = os.path.splitext(rel_path)
+    overwriting = True if suffix == "" and same_dir else False
+
+    if not same_dir:
+        output_path = os.path.join(os.getcwd(), "converted", f"{name}{suffix}{ext}")
+    else:
+        output_path = os.path.join(base_folder, f"{name}{'.' if overwriting else ''}{suffix}{ext}")
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    return output_path, overwriting
