@@ -48,6 +48,7 @@ def convert_video(
 @timed(prinfo)
 def convert_videos(
     input: str, 
+    output: Optional[str] = None,
     suffix: str = "_converted", 
     same_dir: bool = False, 
     ignore_suffix: Optional[str] = None, 
@@ -73,6 +74,7 @@ def convert_videos(
             output_path, overwriting = get_output_path(
                 file_path, 
                 input, 
+                output,
                 suffix, 
                 same_dir)
             result_path = convert_video(
@@ -100,6 +102,7 @@ if __name__ == "__main__":
         description="Script to convert videos to a smaller size and preserve good quality"
     )
     parser.add_argument("input", type=str, help="Input folder path with videos")
+    parser.add_argument("-o", "--output", type=str, default=None, help="Output folder path for converted videos")
     parser.add_argument("-s", "--suffix", type=str, default="_converted", help="Suffix at the end of output file names")
     parser.add_argument("-is", "--ignore-suffix", type=str, default=None, help="Ignore files that already have this suffix")
     parser.add_argument("-sd", "--same-dir", action="store_true", help="Should we save to same directory as the input?")
@@ -114,7 +117,12 @@ if __name__ == "__main__":
         prerror(f"Input folder {args.input} does not exist")
         exit(1)
 
+    if args.output and args.same_dir:
+        prwarn("Ignoring output option since same dir option is enabled")
+        args.output = None
+
     convert_videos(args.input,
+        output=args.output,
         suffix=args.suffix, 
         same_dir=args.same_dir,
         ignore_suffix=args.ignore_suffix,

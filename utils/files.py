@@ -28,15 +28,31 @@ def get_all_video_files(folder_path: str, extensions=VIDEO_EXTENSIONS, ignore_su
                     prwarn(f"Ignoring: {os.path.join(root, file)}")
     return video_files
 
-def get_output_path(file_path: str, base_folder: str, suffix: str = "", same_dir: bool = False) -> tuple[str, bool]:
-    rel_path = os.path.relpath(file_path, base_folder)
+def get_output_path(
+    file_path: str, 
+    input_folder: str, 
+    output_folder: Optional[str] = None, 
+    suffix: str = "", 
+    same_dir: bool = False
+) -> tuple[str, bool]:
+    # Get relative path of the file 
+    # (rel path will be /sub/file.mp4 if input is .../input_folder/sub/file.mp4)
+    rel_path = os.path.relpath(file_path, input_folder)
     name, ext = os.path.splitext(rel_path)
     overwriting = True if suffix == "" and same_dir else False
 
-    if not same_dir:
-        output_path = os.path.join(os.getcwd(), "converted", f"{name}{suffix}{ext}")
+    # Output path will prioritize same_dir, then output_folder,
+    # if nothing provided, will use converted folder in cwd
+    if same_dir:
+        output_path = os.path.join(input_folder, 
+        f"{name}{'.' if overwriting else ''}{suffix}{ext}")
     else:
-        output_path = os.path.join(base_folder, f"{name}{'.' if overwriting else ''}{suffix}{ext}")
+        if output_folder:
+            output_path = os.path.join(output_folder, rel_path)
+        else:
+            output_path = os.path.join(os.getcwd(),
+             "converted", 
+             f"{name}{suffix}{ext}")
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     return output_path, overwriting
