@@ -106,8 +106,8 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output", type=str, default=None, help="Output folder path for converted videos")
     parser.add_argument("-s", "--suffix", type=str, default="_converted", help="Suffix at the end of output file names")
     parser.add_argument("-is", "--ignore-suffix", type=str, default=None, help="Ignore files that already have this suffix")
-    parser.add_argument("-sd", "--same-dir", action="store_true", help="Should we save to same directory as the input?")
-    parser.add_argument("-del", "--delete-original", action="store_true", help="Should we delete original files after conversion?")
+    parser.add_argument("-sd", "--same-dir", action="store_true", default=False, help="Should we save to same directory as the input?")
+    parser.add_argument("-del", "--delete-original", action="store_true", default=False, help="Should we delete original files after conversion?")
     parser.add_argument("--debug", action="store_true", default=False, help="Enable debug logging")
     args = parser.parse_args()
 
