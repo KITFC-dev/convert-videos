@@ -11,6 +11,7 @@
 ```text
 Args:
     input (str): Input folder path with videos
+    output (str): Output folder path for converted videos
     suffix (str): Suffix at the end of output file names
     same_dir (bool): Save to same directory as the input?
     ignore_suffix (str): Ignore files that already have this suffix
