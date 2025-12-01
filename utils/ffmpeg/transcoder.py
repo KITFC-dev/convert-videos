@@ -1,7 +1,7 @@
 import subprocess
 import shlex
 import shutil
-from .core import detect_hw_encoder, build_args
+from .core import detect_hw_encoder_key, build_args
 from utils.logger import prwarn, prdebug
 
 def transcode(
@@ -12,7 +12,7 @@ def transcode(
     overwrite: bool = True,
     prefer_gpu: bool = True,
     nvenc_cq: int = 19,
-    target_resolution: str = "1280x720"
+    target_resolution: str = "1280x720",
 ):
     """
     Transcodes a video file using ffmpeg from one format to another.
@@ -35,13 +35,13 @@ def transcode(
         )
 
     # Check if NVENC is available
-    hw = detect_hw_encoder() if prefer_gpu else None
+    hw = detect_hw_encoder_key() if prefer_gpu else None
     if hw:
-        prdebug(f"Detected hardware encoder: {hw}")
+        prdebug(f"Using hardware encoder: {hw}")
     else:
-        prwarn("No hardware HEVC encoder detected, using libx265 (software).")
+        prwarn("No hardware HEVC encoder detected, using libx265 instead")
 
-    # Build ffmpeg arguments based on if NVENC is available
+    # Build ffmpeg arguments based on if hardware acceleration is available
     video_args = build_args(hw, ten_bit, nvenc_cq)
 
     # Build ffmpeg command
@@ -56,14 +56,28 @@ def transcode(
         "-loglevel", "info",
     ]
 
-    # Use NVENC if available, use CUDA for backend
+    # Set hardware encoder
     if hw == "nvenc":
         args += ["-hwaccel", "cuda"]
+    elif hw == "qsv":
+        args += ["-hwaccel", "qsv"]
+    elif hw == "amf":
+        args += ["-hwaccel", "amf"]
+    elif hw == "vaapi":
+        args += ["-hwaccel", "vaapi"]
 
     # Set input path and target resolution, force_original_aspect_ratio
     # ensures that video wont be distorted by stretching
-    args += ["-i", str(input_path),
-            "-vf", f"scale={target_resolution}:force_original_aspect_ratio=decrease"]
+    args += ["-i", str(input_path)]
+    if hw == "vaapi":
+        # VAAPI filter chain (10-bit p010 or 8-bit nv12)
+        va_fmt = "p010" if ten_bit else "nv12"
+        w, h = map(int, target_resolution.split("x"))
+        vf_chain = f"format={va_fmt},hwupload,scale_vaapi=w={w}:h={h}:force_original_aspect_ratio=decrease"
+        args += ["-vf", vf_chain]
+    elif target_resolution:
+        # CPU-based scale for other encoders
+        args += ["-vf", f"scale={target_resolution}:force_original_aspect_ratio=decrease"]
 
     # Video arguments that were built earlier
     args += video_args
