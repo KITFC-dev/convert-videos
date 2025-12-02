@@ -1,15 +1,19 @@
 # Video Converter
-## Script to convert videos to a smaller size and preserve good quality
 
-# Requirements
+Script to convert videos to a smaller size and preserve good quality with support for NVENC, QSV, AMF and VA-API
+
+## Requirements
+
 1. ffmpeg needs to be installed and added to PATH.
 2. Python 3.12
 3. Optionally Opus for better compression of audio
 
-# Usage
-### Run the `main.py` file with these arguments:
+## Usage
+
+### Run the `main.py` file with these arguments
+
 ```text
-usage: main.py [-h] [-o OUTPUT] [-s SUFFIX] [-is IGNORE_SUFFIX] [-sd] [-del] [--debug] input
+usage: main.py [-h] [-o OUTPUT] [-s SUFFIX] [-is IGNORE_SUFFIX] [-sd] [-del] [-cq CQ] [--debug] input
 
 positional arguments:
   input                 Input folder path with videos
@@ -25,5 +29,6 @@ options:
   -sd, --same-dir       Should we save to same directory as the input?
   -del, --delete-original
                         Should we delete original files after conversion?
+  -cq CQ                Constant Quantization for video encoding (0-51)
   --debug               Enable debug logging
 ```
