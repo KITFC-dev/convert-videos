@@ -12,6 +12,7 @@ def convert_video(
     input: str, 
     output: str, 
     overwriting: bool, 
+    cq: int = 28,
     delete_original: bool = False
 ) -> str:
     os.makedirs(os.path.dirname(output), exist_ok=True)
@@ -25,9 +26,9 @@ def convert_video(
         ten_bit=True,
         # Try to keep 96k unless theres music in the video, then use 128k or 256k
         audio_bitrate="96k",
-        # NVENC's Constant Quantization (0-51), the smaller number the better
+        # Constant Quantization (0-51), the smaller number the better
         # video quality is but bigger size, higher number is more compression
-        nvenc_cq=28,
+        cq=cq,
         # If you pick 1920x1080 it will take almost twice as long as 1280x720,
         # but conversion is almost the same size as 1280x720 for better quality.
         # Example: 1920x1080 is 2019.40 MB -> 155.57 MB (92.30%) (75.45s)
@@ -52,6 +53,7 @@ def convert_videos(
     suffix: str = "_converted", 
     same_dir: bool = False, 
     ignore_suffix: Optional[str] = None, 
+    cq: int = 28,
     delete_original: bool = False
 ) -> list[str]:
     """
@@ -82,6 +84,7 @@ def convert_videos(
                 file_path, 
                 output_path, 
                 overwriting, 
+                cq=cq,
                 delete_original=delete_original)
 
             prsuccess(f"Converted to: {result_path} ({mb(result_path)})")
@@ -102,30 +105,47 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Script to convert videos to a smaller size and preserve good quality"
     )
-    parser.add_argument("input", type=str, help="Input folder path with videos")
-    parser.add_argument("-o", "--output", type=str, default=None, help="Output folder path for converted videos")
-    parser.add_argument("-s", "--suffix", type=str, default="_converted", help="Suffix at the end of output file names")
-    parser.add_argument("-is", "--ignore-suffix", type=str, default=None, help="Ignore files that already have this suffix")
-    parser.add_argument("-sd", "--same-dir", action="store_true", default=False, help="Should we save to same directory as the input?")
-    parser.add_argument("-del", "--delete-original", action="store_true", default=False, help="Should we delete original files after conversion?")
-    parser.add_argument("--debug", action="store_true", default=False, help="Enable debug logging")
+    parser.add_argument("input", type=str, 
+        help="Input folder path with videos")
+    parser.add_argument("-o", "--output", type=str, default=None, 
+        help="Output folder path for converted videos")
+    parser.add_argument("-s", "--suffix", type=str, default="_converted", 
+        help="Suffix at the end of output file names")
+    parser.add_argument("-is", "--ignore-suffix", type=str, default=None, 
+        help="Ignore files that already have this suffix")
+    parser.add_argument("-sd", "--same-dir", action="store_true", default=False, 
+        help="Should we save to same directory as the input?")
+    parser.add_argument("-del", "--delete-original", action="store_true", default=False, 
+        help="Should we delete original files after conversion?")
+    parser.add_argument("-cq", type=int, default=28, 
+        help="Constant Quantization for video encoding (0-51)")
+    parser.add_argument("--debug", action="store_true", default=False, 
+        help="Enable debug logging")
     args = parser.parse_args()
 
     import utils.logger
     utils.logger.DEBUG = args.debug
 
+    # Check if input folder exists
     if not os.path.exists(args.input):
         prerror(f"Input folder {args.input} does not exist")
         exit(1)
 
+    # Ignore output option, if same dir is enabled
     if args.output and args.same_dir:
         prwarn("Ignoring output option since same dir option is enabled")
         args.output = None
+    
+    # Check if CQ value is valid
+    if not (0 <= args.cq <= 51):
+        prwarn(f"Invalid CQ value: {args.cq}, using default value (28)")
+        args.cq = 28
 
     convert_videos(args.input,
         output=args.output,
         suffix=args.suffix, 
         same_dir=args.same_dir,
         ignore_suffix=args.ignore_suffix,
+        cq=args.cq,
         delete_original=args.delete_original
     )

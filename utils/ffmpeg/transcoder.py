@@ -11,7 +11,7 @@ def transcode(
     audio_bitrate: str = "96k",
     overwrite: bool = True,
     prefer_gpu: bool = True,
-    nvenc_cq: int = 19,
+    cq: int = 19,
     target_resolution: str = "1280x720",
 ):
     """
@@ -24,7 +24,7 @@ def transcode(
         audio_bitrate (str): Bitrate of the audio, "96k" is the default
         overwrite (bool): Should we overwrite output file if it exists?
         prefer_gpu (bool): Should we use the GPU for encoding?
-        nvenc_cq (int): Constant quality for NVENC, lower is better quality
+        cq (int): Constant quality, lower is better quality
         target_resolution (str): Target resolution for the output video
     """
     # Check if ffmpeg is in PATH
@@ -42,7 +42,7 @@ def transcode(
         prwarn("No hardware HEVC encoder detected, using libx265 instead")
 
     # Build ffmpeg arguments based on if hardware acceleration is available
-    video_args = build_args(hw, ten_bit, nvenc_cq)
+    video_args = build_args(hw, ten_bit, cq)
 
     # Build ffmpeg command
     args = [

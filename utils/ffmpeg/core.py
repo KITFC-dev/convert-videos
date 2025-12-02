@@ -91,7 +91,7 @@ def build_args(encoder_key: Optional[str], ten_bit: bool, cq: int):
     Returns:
         List[str]: Arguments to pass to ffmpeg
     """
-    pix_fmt = "yuv420p10le" if ten_bit else "yuv420p"
+    
     if encoder_key == "nvenc":
         return [
             # This uses GPU if NVENC is detected
@@ -126,7 +126,7 @@ def build_args(encoder_key: Optional[str], ten_bit: bool, cq: int):
             "-look_ahead", "1",
 
             # Pixel format, prefer 10bit
-            "-pix_fmt", pix_fmt
+            "-pix_fmt", "p010le" if ten_bit else "yuv420p"
         ]
     elif encoder_key == "qsv":
         return [
@@ -134,17 +134,16 @@ def build_args(encoder_key: Optional[str], ten_bit: bool, cq: int):
             "-c:v", "hevc_qsv",
             # Constant quality, lower is better quality
             "-q:v", str(cq),
-            # Pixel format, prefer 10bit
+            # Pixel format
             "-pix_fmt", "p010le" if ten_bit else "yuv420p"
         ]
+    # AMF doesn't have good support for 10bit
     elif encoder_key == "amf":
         return [
             # This uses GPU if AMF is detected
             "-c:v", "hevc_amf",
             # Constant quality, lower is better quality
             "-q:v", str(cq),
-            # Pixel format, prefer 10bit
-            "-pix_fmt", pix_fmt
         ]
     elif encoder_key == "vaapi":
         return [
@@ -153,19 +152,20 @@ def build_args(encoder_key: Optional[str], ten_bit: bool, cq: int):
             "-vaapi_device", "/dev/dri/renderD128",
             # Constant quality, lower is better quality
             "-q:v", str(cq),
+            # Pixel format
+            "-pix_fmt", "p010le" if ten_bit else "yuv420p"
         ]
+    # Fallback to libx265 if no GPU encoder is detected
+    # This is actually may be a little better than other
+    # encoders, but CPUs are usually slower than GPUs so
+    # this is not a really good option.
     else:
-        # Fallback to libx265 if no GPU encoder is detected
         return [
-            # This is actually better than NVENC, but CPUs are usually slower
-            # so this is not really good option and change in size is not that big.
-            # Also, I cant be bothered to wait few days for it to finish
-            # compressing my 200GB video folder on my i5-13400F.
             "-c:v", "libx265",
             # Very slow, best quality
             "-preset", "veryslow",
             "-crf", "24",
-            "-pix_fmt", pix_fmt
+            "-pix_fmt", "yuv420p10le" if ten_bit else "yuv420p"
         ]
 
 if __name__ == "__main__":
