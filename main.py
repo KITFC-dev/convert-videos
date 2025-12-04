@@ -71,7 +71,7 @@ def convert_videos(
     input_size = get_folder_size(input)
 
     for file_path in video_files:
-        prinfo(f"Converting: {file_path} ({mb(file_path)})")
+        prinfo(f"Converting: {file_path} ({mb(file_path, ignore_suffix, suffix)})")
         try:
             # Convert the file
             output_path, overwriting = get_output_path(
@@ -87,7 +87,7 @@ def convert_videos(
                 cq=cq,
                 delete_original=delete_original)
 
-            prsuccess(f"Converted to: {result_path} ({mb(result_path)})")
+            prsuccess(f"Converted to: {result_path} ({mb(result_path, ignore_suffix, suffix)})")
             converted_files.append(result_path)
         except Exception as e:
             prerror(f"Failed to convert: {file_path}: {e}")
