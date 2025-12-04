@@ -37,7 +37,7 @@ def generate_test_video(
     ], check=True)
 
 
-def run_transcode_test(input_file, prefer_gpu=True, ten_bit=False, nvenc_cq=19, audio_bitrate="96k"):
+def run_transcode_test(input_file, prefer_gpu=True, ten_bit=False, cq=19, audio_bitrate="96k"):
     """Helper function to run transcode function in temp dir """
     with tempfile.TemporaryDirectory() as tmpdir:
         output_path = os.path.join(tmpdir, "output.mp4")
@@ -48,14 +48,14 @@ def run_transcode_test(input_file, prefer_gpu=True, ten_bit=False, nvenc_cq=19, 
             ten_bit=ten_bit,
             audio_bitrate=audio_bitrate,
             prefer_gpu=prefer_gpu,
-            nvenc_cq=nvenc_cq
+            cq=cq
         )
 
         assert os.path.exists(output_path), "Output file does not exist"
         assert os.path.getsize(output_path) > 0, "Output file is empty"
 
 @pytest.mark.parametrize("encoder_config", [
-    {"name": "nvenc", "prefer_gpu": True, "ten_bit": True, "nvenc_cq": 19},
+    {"name": "nvenc", "prefer_gpu": True, "ten_bit": True, "cq": 19},
     {"name": "x265", "prefer_gpu": False, "ten_bit": False}
 ])
 @pytest.mark.parametrize("resolution", ["320x240", "1280x720", "1920x1080"])
@@ -76,7 +76,7 @@ def test_video_encoding(encoder_config, resolution, bitrate):
             input_file=test_input,
             prefer_gpu=encoder_config.get("prefer_gpu", True),
             ten_bit=encoder_config.get("ten_bit", False),
-            nvenc_cq=encoder_config.get("nvenc_cq", 19),
+            cq=encoder_config.get("cq", 19),
         )
     finally:
         # Delete the test video at the end
